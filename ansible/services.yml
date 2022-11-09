@@ -1,0 +1,29 @@
+- hosts: _django
+  become: yes
+  remote_user: admin
+  roles:
+    - role: django
+      vars:
+        PORT: 8000
+      
+- hosts: _sentry
+  become: yes
+  remote_user: admin
+  roles:
+    - role: sentry
+      vars:
+        sentry_port: 8080
+
+- hosts: _prometheus
+  become: yes
+  remote_user: admin
+  roles:
+    - role: prometheus
+      vars:
+        grafana_port: 3000
+        prom_port: 9090
+        cadvisor_port: 8080
+
+
+
+

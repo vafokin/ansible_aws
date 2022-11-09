@@ -1,0 +1,43 @@
+version: '3'
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+    - {{prom_port}}:{{prom_port}}
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+    - cadvisor
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+    - {{cadvisor_port}}:{{cadvisor_port}}
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+    - redis
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+    - 6379:6379
+
+  grafana:
+    restart: always
+    image: grafana/grafana
+    ports:
+    - {{grafana_port}}:{{grafana_port}}
+    expose:
+      - "{{prom_port}}"
+      - "{{cadvisor_port}}"
+    depends_on:
+      - prometheus

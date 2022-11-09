@@ -1,0 +1,91 @@
+---
+  - name: create key pair
+    amazon.aws.ec2_key:
+      region: '{{ region }}'
+      name: "test_key"
+      key_material: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"  
+
+  - name: create sg
+    amazon.aws.ec2_group:
+      name: 'for_less3_9'
+      description: "test sg for docker"
+      region: '{{region}}'
+      vpc_id: vpc-039836a2eb548714b
+      rules:
+      - proto: tcp
+        from_port: '{{PORT}}'
+        to_port: '{{PORT}}'
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: '{{grafana_port}}'
+        to_port: '{{grafana_port}}'
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: '{{prom_port}}'
+        to_port: '{{prom_port}}' 
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: '{{cadvisor_port}}'
+        to_port: '{{cadvisor_port}}'
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: '{{sentry_port}}'
+        to_port: '{{sentry_port}}'
+        cidr_ip: 0.0.0.0/0
+
+  - name: create instance
+    amazon.aws.ec2_instance:
+      name: '{{item}}'
+      region: '{{ region }}'
+      key_name: "test_key"
+        #      count: 3
+      instance_type: t2.medium
+      image_id: ami-0a5b5c0ea66ec560d
+      vpc_subnet_id: subnet-0ad1301447bbd54f2
+      security_group: 'default'
+      network:
+        assign_public_ip: yes
+        security_group: 'default'
+      volumes:
+        - device_name: /dev/xvda
+          ebs:
+            volume_size: 15
+      tags:
+        Environment: Test
+        Name: '{{item}}'
+    with_items:
+      - sentry
+      - django
+      - prometheus
+    register: ec2
+      
+
+  - name: Wait public IP
+    ansible.builtin.pause:
+      seconds: 80
+
+  - name: 
+    amazon.aws.ec2_instance_info:
+      region: '{{ region }}'
+      filters:
+        "tag:Environment": "Test"
+        instance-state-name: [ "running"]
+    register: result
+
+      #  - name: print all
+      #    debug:
+      #      var: item
+      #      #      var: item.network_interfaces[0].association.public_ip
+      #    loop: "{{ec2.instances}}"
+      #    loop_control:
+      #      index_var: my_idx      
+ 
+      #  - name: Add all instance public IPs to host group
+      #    add_host: 
+      #      hostname: "{{ result.instances[my_idx].network_interfaces[0].association.public_ip }}"
+      #        #      hostname: "{{ item.network_interfaces[0].association.public_ip }}"
+      #      group: "Test"
+      #    loop: "{{ result.instances }}"
+      #    loop_control:
+      #      index_var: my_idx
+

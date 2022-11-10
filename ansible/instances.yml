@@ -12,29 +12,3 @@
   environment:
     AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
     AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
-
-- hosts: _django
-  become: yes
-  remote_user: admin
-  roles:
-    - role: django
-      vars:
-        PORT: 8000
-      #        
-      #- hosts: 1
-      #  become: yes
-      #  remote_user: admin
-      #  roles:
-      #    - role: sentry
-      #      vars:
-      #        sentry_port: 8080
-      #
-      #- hosts: 2
-      #  become: yes
-      #  remote_user: admin
-      #  roles:
-      #    - role: prometheus
-      #      vars:
-      #        grafana_port: 3000
-      #        prom_port: 9090
-      #        cadvisor_port: 8080
